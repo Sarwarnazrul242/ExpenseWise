@@ -27,7 +27,6 @@ function App() {
   return (
     <Router>
       <div className="relative min-h-screen bg-black">
-        {/* Background animations - these stay visible */}
         <div className="fixed inset-0">
           <BackgroundAnimation />
           <GradientBackground />
@@ -36,7 +35,6 @@ function App() {
         {/* Loading screen */}
         {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
 
-        {/* Main content that fades in */}
         <div
           className={`relative min-h-screen transition-opacity duration-700 ${
             !isLoading ? "opacity-100" : "opacity-0"
