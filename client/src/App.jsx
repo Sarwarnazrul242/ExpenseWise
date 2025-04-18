@@ -18,7 +18,7 @@ import "./index.css";
 import { GradientBackground } from "./components/GradientBackground";
 import { Login } from "./components/sections/loginpage/Login";
 import { Signup } from "./components/sections/loginpage/Signup";
-import { Dashboard } from "./components/sections/dashboard/Dashboard";
+import { Dashboard } from "./components/sections/dashboard/Dashboard.jsx";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
