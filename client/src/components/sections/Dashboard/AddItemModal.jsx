@@ -316,86 +316,71 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd }) => {
           )}
 
           {/* Amount Input */}
-          {type === 'incomes' && (
-            <>
-              <div className="space-y-2">
-                <label className="block text-sm text-gray-400">Payment Frequency</label>
-                <select
-                  name="frequency"
-                  value={formData.frequency}
-                  onChange={handleFrequencyChange}
-                  required
-                  className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="weekly">Weekly</option>
-                  <option value="bi-weekly">Bi-Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
-              </div>
-
-              {isPaycheck ? (
-                <div className="space-y-4">
-                  <label className="block text-sm text-gray-400">
-                    {formData.frequency === 'weekly' ? 'Weekly Amounts' :
-                     formData.frequency === 'bi-weekly' ? 'Bi-Weekly Amounts' :
-                     'Monthly Amount'}
-                  </label>
-                  {weeklyAmounts.map((amount, index) => (
-                    <div key={index} className="relative">
-                      <input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => handleWeeklyAmountChange(index, e.target.value)}
-                        placeholder={`Amount for ${formData.frequency === 'weekly' ? `Week ${index + 1}` : 
-                                    formData.frequency === 'bi-weekly' ? `Period ${index + 1}` : 
-                                    'Month'}`}
-                        required
-                        min="0"
-                        step="0.01"
-                        className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <DollarSign className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    </div>
-                  ))}
-                  <div className="text-sm text-gray-400">
-                    Total: ${weeklyAmounts.reduce((sum, amount) => sum + (parseFloat(amount) || 0), 0).toFixed(2)}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <label className="block text-sm text-gray-400">Amount</label>
+          <div className="space-y-2">
+            <label className="block text-sm text-gray-400">Amount</label>
             <div className="relative">
               <input
                 type="number"
                 name="amount"
                 value={formData.amount}
                 onChange={handleChange}
-                      required
-                      min="0"
-                      step="0.01"
+                required
+                min="0"
+                step="0.01"
                 className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-                    <DollarSign className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <DollarSign className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>
           </div>
-              )}
 
-              <div className="space-y-2">
-                <label className="block text-sm text-gray-400">Next Payment Date</label>
-                <div className="relative">
-              <input
-                type="date"
-                    name="nextPayDate"
-                    value={formData.nextPayDate}
-                onChange={handleChange}
-                    required
+          {/* Frequency Input */}
+          {type === 'incomes' && (
+            <div className="space-y-2">
+              <label className="block text-sm text-gray-400">Payment Frequency</label>
+              <select
+                name="frequency"
+                value={formData.frequency}
+                onChange={handleFrequencyChange}
+                required
                 className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="weekly">Weekly</option>
+                <option value="bi-weekly">Bi-Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+          )}
+
+          {/* Weekly Amounts Input */}
+          {isPaycheck && (
+            <div className="space-y-4">
+              <label className="block text-sm text-gray-400">
+                {formData.frequency === 'weekly' ? 'Weekly Amounts' :
+                 formData.frequency === 'bi-weekly' ? 'Bi-Weekly Amounts' :
+                 'Monthly Amount'}
+              </label>
+              {weeklyAmounts.map((amount, index) => (
+                <div key={index} className="relative">
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => handleWeeklyAmountChange(index, e.target.value)}
+                    placeholder={`Amount for ${formData.frequency === 'weekly' ? `Week ${index + 1}` : 
+                                formData.frequency === 'bi-weekly' ? `Period ${index + 1}` : 
+                                'Month'}`}
+                    required
+                    min="0"
+                    step="0.01"
+                    className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <DollarSign className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 </div>
+              ))}
+              <div className="text-sm text-gray-400">
+                Total: ${weeklyAmounts.reduce((sum, amount) => sum + (parseFloat(amount) || 0), 0).toFixed(2)}
               </div>
-            </>
+            </div>
           )}
 
           {/* Category Input */}
@@ -489,6 +474,24 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd }) => {
                 </div>
               </div>
             </>
+          )}
+
+          {/* Next Payment Date Input */}
+          {type === 'incomes' && (
+            <div className="space-y-2">
+              <label className="block text-sm text-gray-400">Next Payment Date</label>
+              <div className="relative">
+                <input
+                  type="date"
+                  name="nextPayDate"
+                  value={formData.nextPayDate}
+                  onChange={handleChange}
+                  required
+                  className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              </div>
+            </div>
           )}
 
           <div className="flex justify-end gap-4 mt-6">
