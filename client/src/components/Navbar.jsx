@@ -40,22 +40,7 @@ export const Navbar = ({ menuOpen, setMenuOpen }) => {
               >
                 Home
               </Link>
-              <Link
-                to="features"
-                smooth={true}
-                duration={500}
-                className="text-gray-300 hover:text-white cursor-pointer"
-              >
-                Features
-              </Link>
-              <Link
-                to="how-it-works"
-                smooth={true}
-                duration={500}
-                className="text-gray-300 hover:text-white cursor-pointer"
-              >
-                How It Works
-              </Link>
+              
               <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white font-semibold hover:opacity-90 transition-opacity">
                 Get Started
               </button>
