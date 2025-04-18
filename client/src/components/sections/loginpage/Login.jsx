@@ -1,19 +1,34 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { TextHoverEffect } from "../../ui/TextHoverEffect";
+import { authAPI } from '../../../services/api';
 
 export const Login = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login submitted:", formData);
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await authAPI.login(formData.email, formData.password);
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'An error occurred during login');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -44,6 +59,12 @@ export const Login = () => {
             Sign in to your ExpenseWise account
           </p>
         </div>
+
+        {error && (
+          <div className="bg-red-500 text-white p-3 rounded-md text-sm">
+            {error}
+          </div>
+        )}
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
@@ -113,9 +134,10 @@ export const Login = () => {
           <div>
             <button
               type="submit"
+              disabled={loading}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
             >
-              Sign in
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
         </form>

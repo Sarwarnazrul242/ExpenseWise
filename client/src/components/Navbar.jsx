@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-scroll";
+import { Link } from "react-router-dom";
+import { Menu, X, LogOut } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 import logo from "../assets/logo.png";
 
 export const Navbar = ({ menuOpen, setMenuOpen }) => {
+  const { user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -32,18 +35,27 @@ export const Navbar = ({ menuOpen, setMenuOpen }) => {
           {/* Desktop Navigation */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-center space-x-8">
-              <Link
-                to="hero"
-                smooth={true}
-                duration={500}
-                className="text-gray-300 hover:text-white cursor-pointer"
-              >
-                Home
-              </Link>
-              
-              <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white font-semibold hover:opacity-90 transition-opacity">
-                Get Started
-              </button>
+              {user ? (
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:opacity-90 transition-opacity"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span>Logout</span>
+                </button>
+              ) : (
+                <>
+                  <Link
+                    to="/"
+                    className="text-gray-300 hover:text-white cursor-pointer"
+                  >
+                    Home
+                  </Link>
+                  <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white font-semibold hover:opacity-90 transition-opacity">
+                    Get Started
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -53,28 +65,11 @@ export const Navbar = ({ menuOpen, setMenuOpen }) => {
               onClick={() => setMenuOpen(!menuOpen)}
               className="text-gray-300 hover:text-white focus:outline-none"
             >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                {menuOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                )}
-              </svg>
+              {menuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
           </div>
         </div>

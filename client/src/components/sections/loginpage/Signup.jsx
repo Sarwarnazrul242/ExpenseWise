@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { TextHoverEffect } from "../../ui/TextHoverEffect";
+import { useAuth } from "../../../context/AuthContext";
 
 export const Signup = () => {
+  const navigate = useNavigate();
+  const { signup } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -12,11 +15,28 @@ export const Signup = () => {
     password: "",
     confirmPassword: "",
   });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle signup logic here
-    console.log("Signup submitted:", formData);
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await signup(formData.name, formData.email, formData.password);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'An error occurred during signup');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -47,6 +67,12 @@ export const Signup = () => {
             Join ExpenseWise and start managing your finances for free
           </p>
         </div>
+
+        {error && (
+          <div className="bg-red-500 text-white p-3 rounded-md text-sm">
+            {error}
+          </div>
+        )}
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
@@ -136,9 +162,10 @@ export const Signup = () => {
           <div>
             <button
               type="submit"
+              disabled={loading}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
             >
-              Create Account
+              {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </div>
         </form>
