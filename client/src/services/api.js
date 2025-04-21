@@ -18,6 +18,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Handle unauthorized responses
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const authAPI = {
   login: async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
@@ -27,6 +40,39 @@ export const authAPI = {
     const response = await api.post('/auth/signup', { name, email, password });
     return response.data;
   },
+  verifyEmail: async (email, otp) => {
+    const response = await api.post('/auth/verify-email', { email, otp });
+    return response.data;
+  },
+  resendOtp: async (email) => {
+    const response = await api.post('/auth/resend-otp', { email });
+    return response.data;
+  },
+  verifyToken: async (token) => {
+    if (!token) return { valid: false };
+    const response = await api.post('/auth/verify-token', { token });
+    return response.data;
+  },
+  updateName: async (name) => {
+    const response = await api.put('/auth/update-name', { name });
+    return response.data;
+  },
+  updatePassword: async (currentPassword, newPassword) => {
+    const response = await api.put('/auth/update-password', { currentPassword, newPassword });
+    return response.data;
+  },
+  forgotPassword: async (email) => {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
+  },
+  verifyResetOtp: async (email, otp) => {
+    const response = await api.post('/auth/verify-reset-otp', { email, otp });
+    return response.data;
+  },
+  resetPassword: async (email, otp, newPassword) => {
+    const response = await api.post('/auth/reset-password', { email, otp, newPassword });
+    return response.data;
+  }
 };
 
 export default api; 

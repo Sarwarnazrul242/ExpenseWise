@@ -30,8 +30,15 @@ export const Signup = () => {
     setLoading(true);
 
     try {
-      await signup(formData.name, formData.email, formData.password);
-      navigate('/dashboard');
+      const response = await signup(formData.name, formData.email, formData.password);
+      
+      // Store email for verification page
+      localStorage.setItem('pendingVerificationEmail', formData.email);
+      
+      // Navigate to verification page with email in state
+      navigate('/verify-email', { 
+        state: { email: formData.email }
+      });
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred during signup');
     } finally {

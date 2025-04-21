@@ -13,15 +13,17 @@ const auth = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       
-      // Add user from payload
-      req.user = decoded;
+      // Add user ID from payload
+      req.user = { id: decoded.user.id };
       next();
     } catch (err) {
-      res.status(401).json({ message: 'Token is not valid' });
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ message: 'Token expired' });
+      }
+      return res.status(401).json({ message: 'Token is not valid' });
     }
   } catch (err) {
-    console.error('Error in auth middleware:', err.message);
-    res.status(500).send('Server Error');
+    res.status(500).json({ message: 'Server Error' });
   }
 };
 

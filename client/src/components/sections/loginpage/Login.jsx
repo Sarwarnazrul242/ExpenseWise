@@ -3,9 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { TextHoverEffect } from "../../ui/TextHoverEffect";
 import { authAPI } from '../../../services/api';
+import { useAuth } from '../../../context/AuthContext';
 
 export const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -20,9 +22,7 @@ export const Login = () => {
     setLoading(true);
 
     try {
-      const response = await authAPI.login(formData.email, formData.password);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      await login(formData.email, formData.password);
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred during login');

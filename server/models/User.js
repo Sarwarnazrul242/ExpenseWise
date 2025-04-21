@@ -30,6 +30,15 @@ const debtSchema = new mongoose.Schema({
   minimumPayment: { type: Number, required: true }
 });
 
+const incomeSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  amount: { type: Number, required: true },
+  frequency: { type: String, enum: ['weekly', 'bi-weekly', 'monthly'], default: 'monthly' },
+  nextPayDate: { type: Date, required: true },
+  isPaycheck: { type: Boolean, default: false },
+  weeklyAmounts: [{ type: Number }]
+});
+
 const paycheckConfigSchema = new mongoose.Schema({
   frequency: { type: String, enum: ['weekly', 'bi-weekly', 'monthly'], default: 'monthly' },
   lastPaycheckDate: { type: Date, default: Date.now },
@@ -50,22 +59,6 @@ const subscriptionSchema = new mongoose.Schema({
   }
 });
 
-// Update the income schema to include weekly amounts
-const incomeSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  amount: { type: Number, required: true },
-  frequency: { 
-    type: String, 
-    enum: ['weekly', 'bi-weekly', 'monthly', 'yearly'],
-    required: true 
-  },
-  category: { type: String, required: true },
-  nextPayDate: { type: Date, required: true },
-  weeklyAmounts: [{ type: Number }], // Array to store weekly/bi-weekly amounts for paychecks
-  isPaycheck: { type: Boolean, default: false } // Flag to identify if this is a paycheck
-});
-
-// Update the dashboard schema to use the income schema
 const dashboardSchema = new mongoose.Schema({
   bills: { type: [billSchema], default: [] },
   expenses: { type: [expenseSchema], default: [] },
@@ -107,7 +100,29 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  verificationOTP: {
+    type: String,
+    select: false
+  },
+  otpExpires: {
+    type: Date,
+    select: false
+  },
+  resetOTP: {
+    type: String,
+    select: false
+  },
+  resetOTPExpires: {
+    type: Date,
+    select: false
+  },
   dashboard: { type: dashboardSchema, default: () => ({}) }
+}, {
+  timestamps: true
 });
 
 // Hash password before saving

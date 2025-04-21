@@ -11,24 +11,43 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is logged in
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-      setToken(storedToken);
-    }
-    setLoading(false);
-  }, []);
+    const checkAuth = async () => {
+      const storedUser = localStorage.getItem('user');
+      const storedToken = localStorage.getItem('token');
+      
+      if (storedUser && storedToken) {
+        try {
+          const response = await authAPI.verifyToken(storedToken);
+          if (response.valid) {
+            setUser(JSON.parse(storedUser));
+            setToken(storedToken);
+          } else {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            navigate('/login');
+          }
+        } catch (error) {
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          navigate('/login');
+        }
+      }
+      setLoading(false);
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const login = async (email, password) => {
     try {
       const response = await authAPI.login(email, password);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      setToken(response.token);
-      setUser(response.user);
-      navigate('/dashboard');
+      if (response.token && response.user) {
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+        setToken(response.token);
+        setUser(response.user);
+        navigate('/dashboard');
+      }
       return response;
     } catch (error) {
       throw error;
@@ -38,32 +57,50 @@ export const AuthProvider = ({ children }) => {
   const signup = async (name, email, password) => {
     try {
       const response = await authAPI.signup(name, email, password);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      setToken(response.token);
-      setUser(response.user);
-      navigate('/dashboard');
       return response;
     } catch (error) {
       throw error;
     }
   };
 
+  const updateUserAfterVerification = (token, userData) => {
+    if (token && userData) {
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      setToken(token);
+      setUser(userData);
+    }
+  };
+
   const logout = () => {
-    // Clear local storage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    
-    // Reset state
     setToken(null);
     setUser(null);
-    
-    // Navigate to login page
     navigate('/login', { replace: true });
   };
 
+  const updateUser = (userData) => {
+    if (userData) {
+      const updatedUser = { ...user, ...userData };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, signup, logout, loading }}>
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        token, 
+        login, 
+        signup, 
+        logout, 
+        loading,
+        updateUserAfterVerification,
+        updateUser
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

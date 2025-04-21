@@ -7,6 +7,7 @@ const User = require('../models/User');
 router.get('/', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
+    
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -25,7 +26,7 @@ router.get('/', auth, async (req, res) => {
       }
     });
   } catch (err) {
-    console.error(err.message);
+    console.error('Dashboard route error:', err.message);
     res.status(500).send('Server Error');
   }
 });
@@ -33,13 +34,10 @@ router.get('/', auth, async (req, res) => {
 // Update dashboard data
 router.put('/', auth, async (req, res) => {
   try {
-    console.log('Received update request:', req.body);
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    console.log('Current dashboard state:', user.dashboard);
 
     // Initialize dashboard if it doesn't exist
     if (!user.dashboard) {
@@ -59,8 +57,6 @@ router.put('/', auth, async (req, res) => {
 
     // Handle paycheck config update
     if (req.body.paycheckConfig) {
-      console.log('Updating paycheck config:', req.body.paycheckConfig);
-      
       // Ensure weeklyIncome is an array of numbers
       const weeklyIncome = Array.isArray(req.body.paycheckConfig.weeklyIncome) 
         ? req.body.paycheckConfig.weeklyIncome.map(Number)
@@ -75,8 +71,6 @@ router.put('/', auth, async (req, res) => {
         weeklyIncome,
         totalMonthlyIncome
       };
-      
-      console.log('Updated paycheck config:', user.dashboard.paycheckConfig);
     }
 
     // Handle other updates
@@ -85,9 +79,7 @@ router.put('/', auth, async (req, res) => {
     if (req.body.savings) user.dashboard.savings = req.body.savings;
     if (req.body.debts) user.dashboard.debts = req.body.debts;
 
-    console.log('Saving dashboard state:', user.dashboard);
     await user.save();
-    console.log('Save successful');
     res.json(user.dashboard);
   } catch (err) {
     console.error('Error in dashboard update:', err);
@@ -95,7 +87,7 @@ router.put('/', auth, async (req, res) => {
   }
 });
 
-// Update the POST route to handle subscriptions
+// Add new item
 router.post('/:type', auth, async (req, res) => {
   try {
     const { type } = req.params;
@@ -113,7 +105,7 @@ router.post('/:type', auth, async (req, res) => {
         expenses: [],
         savings: [],
         debts: [],
-        subscriptions: [],
+        incomes: [],
         paycheckConfig: {
           frequency: 'monthly',
           lastPaycheckDate: new Date(),
@@ -124,7 +116,7 @@ router.post('/:type', auth, async (req, res) => {
     }
 
     // Validate and process the item based on type
-    if (['bills', 'expenses', 'savings', 'debts', 'subscriptions'].includes(type)) {
+    if (['bills', 'expenses', 'savings', 'debts', 'incomes'].includes(type)) {
       if (!user.dashboard[type]) {
         user.dashboard[type] = [];
       }
@@ -141,21 +133,21 @@ router.post('/:type', auth, async (req, res) => {
         } else {
           item.date = new Date();
         }
-      } else if (type === 'subscriptions') {
-        // Handle subscription-specific fields
+      } else if (type === 'incomes') {
+        // Handle income-specific fields
         item.amount = parseFloat(item.amount);
-        if (item.dueDate) {
-          const dueDate = new Date(item.dueDate);
-          if (isNaN(dueDate.getTime())) {
-            return res.status(400).json({ message: 'Invalid due date format' });
+        if (item.nextPayDate) {
+          const nextPayDate = new Date(item.nextPayDate);
+          if (isNaN(nextPayDate.getTime())) {
+            return res.status(400).json({ message: 'Invalid next payment date format' });
           }
-          item.dueDate = dueDate;
+          item.nextPayDate = nextPayDate;
         } else {
-          item.dueDate = new Date();
+          item.nextPayDate = new Date();
         }
-        // Set default billing cycle if not provided
-        if (!item.billingCycle) {
-          item.billingCycle = 'monthly';
+        // Convert weekly amounts to numbers if they exist
+        if (item.weeklyAmounts) {
+          item.weeklyAmounts = item.weeklyAmounts.map(Number);
         }
       } else if (type === 'bills') {
         item.amount = parseFloat(item.amount);
@@ -190,10 +182,11 @@ router.post('/:type', auth, async (req, res) => {
       res.status(400).json({ message: 'Invalid item type' });
     }
   } catch (error) {
-    console.error('Error adding item:', error);
+    console.error('Error in POST /:type:', error);
     res.status(500).json({ 
       message: 'Server error',
-      error: error.message 
+      error: error.message,
+      stack: error.stack
     });
   }
 });
@@ -209,11 +202,19 @@ router.delete('/:type/:id', auth, async (req, res) => {
     }
 
     // Remove item from the appropriate array
-    if (['bills', 'expenses', 'savings', 'debts'].includes(type)) {
+    if (['bills', 'expenses', 'savings', 'debts', 'incomes', 'subscriptions'].includes(type)) {
       if (!user.dashboard[type]) {
         return res.status(404).json({ message: `${type} array not found` });
       }
+
+      // Find the item before deletion to verify it exists
+      const itemToDelete = user.dashboard[type].find(item => item._id.toString() === id);
+      if (!itemToDelete) {
+        return res.status(404).json({ message: 'Item not found' });
+      }
+
       user.dashboard[type] = user.dashboard[type].filter(item => item._id.toString() !== id);
+
       await user.save();
       res.json(user.dashboard[type]);
     } else {
@@ -237,7 +238,7 @@ router.put('/:type/:id', auth, async (req, res) => {
     }
 
     // Update item in the appropriate array
-    if (['bills', 'expenses', 'savings', 'debts'].includes(type)) {
+    if (['bills', 'expenses', 'savings', 'debts', 'incomes', 'subscriptions'].includes(type)) {
       if (!user.dashboard[type]) {
         return res.status(404).json({ message: `${type} array not found` });
       }
@@ -245,6 +246,18 @@ router.put('/:type/:id', auth, async (req, res) => {
       const itemIndex = user.dashboard[type].findIndex(item => item._id.toString() === id);
       if (itemIndex === -1) {
         return res.status(404).json({ message: 'Item not found' });
+      }
+      
+      // Handle specific type conversions
+      if (type === 'incomes') {
+        updatedItem.amount = parseFloat(updatedItem.amount) || 0;
+        if (updatedItem.nextPayDate) {
+          const nextPayDate = new Date(updatedItem.nextPayDate);
+          if (isNaN(nextPayDate.getTime())) {
+            return res.status(400).json({ message: 'Invalid next payment date format' });
+          }
+          updatedItem.nextPayDate = nextPayDate;
+        }
       }
       
       user.dashboard[type][itemIndex] = {
