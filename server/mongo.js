@@ -9,6 +9,8 @@ const connectDB = async () => {
       socketTimeoutMS: 45000,
     });
 
+    console.log('✓ MongoDB Connected');
+
     // Handle process termination
     process.on('SIGINT', async () => {
       await mongoose.connection.close();
@@ -16,7 +18,7 @@ const connectDB = async () => {
     });
 
   } catch (error) {
-    console.error('Failed to connect to MongoDB:', error.message);
+    console.error('✗ MongoDB Connection Error:', error.message);
     process.exit(1);
   }
 };

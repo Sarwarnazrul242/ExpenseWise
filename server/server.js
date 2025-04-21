@@ -13,10 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-connectDB().catch(err => {
-  console.error('Failed to connect to MongoDB:', err);
-  process.exit(1);
-});
+connectDB();
 
 // Routes
 app.use('/api/auth', authRoutes);
