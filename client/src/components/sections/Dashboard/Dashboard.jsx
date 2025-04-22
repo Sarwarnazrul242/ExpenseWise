@@ -295,8 +295,16 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6 pt-24">
+    <div className="min-h-screen p-6 pt-24 relative overflow-hidden">
       {/* Background elements */}
+      <div className="absolute inset-0">
+        <div className="absolute w-[200%] h-[200%] top-[-50%] left-[-50%] animate-gradient-rotate">
+          <div className="absolute w-full h-full bg-gradient-to-br from-blue-800/20 via-transparent to-cyan-500/20 blur-3xl" />
+          <div className="absolute w-full h-full bg-gradient-to-bl from-blue-500/10 via-transparent to-cyan-800/10 blur-3xl" />
+        </div>
+      </div>
+
+      {/* Blurred circles */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-20 left-20 w-32 h-32 bg-blue-500 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 right-20 w-32 h-32 bg-purple-500 rounded-full blur-3xl"></div>

@@ -25,12 +25,12 @@ export const Navbar = ({ menuOpen, setMenuOpen }) => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex-shrink-0 flex items-center gap-2">
+          <Link to="/" className="flex-shrink-0 flex items-center gap-2">
             <img src={logo} alt="ExpenseWise Logo" className="h-8 w-8" />
             <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
               ExpenseWise
             </span>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
@@ -51,9 +51,12 @@ export const Navbar = ({ menuOpen, setMenuOpen }) => {
                   >
                     Home
                   </Link>
-                  <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white font-semibold hover:opacity-90 transition-opacity">
+                  <Link
+                    to="/login"
+                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white font-semibold hover:opacity-90 transition-opacity"
+                  >
                     Get Started
-                  </button>
+                  </Link>
                 </>
               )}
             </div>
