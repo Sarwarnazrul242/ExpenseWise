@@ -31,16 +31,17 @@ import { AddItemModal } from "./AddItemModal";
 import { Account } from "./Account";
 import { useAuth } from "../../../context/AuthContext";
 import { getDashboardData, updateDashboardData, addItem, deleteItem, editItem } from '../../../services/dashboardAPI';
+import { FinancialCharts } from './FinancialCharts';
 
 // DeleteConfirmationModal Component
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 w-full max-w-md border border-gray-700/50">
+    <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+      <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700">
         <div className="flex flex-col items-center text-center space-y-4">
-          <div className="p-3 bg-red-500/20 rounded-full">
+          <div className="p-3 bg-red-500 rounded-full">
             <AlertTriangle className="h-8 w-8 text-red-400" />
           </div>
           <h2 className="text-xl font-semibold text-white">Delete Confirmation</h2>
@@ -50,13 +51,13 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }) => {
           <div className="flex justify-end gap-4 w-full mt-6">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-gray-700/50 text-white rounded-lg hover:bg-gray-600/50 transition-colors"
+              className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
             >
               Cancel
             </button>
             <button
               onClick={onConfirm}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
             >
               Delete
             </button>
@@ -316,7 +317,7 @@ export const Dashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <button className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 rounded-lg text-white hover:bg-gray-700/50 transition-colors">
+              <button className="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-lg text-white hover:bg-gray-700 transition-colors">
                 <Calendar className="h-5 w-5" />
                 <span>{selectedPeriod}</span>
                 <ChevronDown className="h-4 w-4" />
@@ -332,7 +333,7 @@ export const Dashboard = () => {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               activeTab === 'dashboard'
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
             }`}
           >
             <LayoutDashboard className="h-5 w-5" />
@@ -343,7 +344,7 @@ export const Dashboard = () => {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               activeTab === 'account'
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
             }`}
           >
             <User className="h-5 w-5" />
@@ -359,7 +360,7 @@ export const Dashboard = () => {
               {summaryData.map((item, index) => (
                 <div
                   key={index}
-                  className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 hover:border-gray-600/50 transition-colors"
+                  className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-colors"
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -368,12 +369,12 @@ export const Dashboard = () => {
                         {item.amount}
                       </h3>
                     </div>
-                    <div className="p-3 bg-gray-700/50 rounded-lg">
+                    <div className="p-3 bg-gray-700 rounded-lg">
                       {item.icon}
                     </div>
                   </div>
                   {item.breakdown && (
-                    <div className="mt-4 space-y-2 border-t border-gray-700/50 pt-4">
+                    <div className="mt-4 space-y-2 border-t border-gray-700 pt-4">
                       {item.breakdown.map((detail, idx) => (
                         <div key={idx} className="flex justify-between text-sm">
                           <span className="text-gray-400">{detail.label}</span>
@@ -397,8 +398,19 @@ export const Dashboard = () => {
               ))}
             </div>
 
+            {/* Financial Charts */}
+            <FinancialCharts
+              totalMonthlyIncome={totalMonthlyIncome}
+              totalExpenses={totalExpenses}
+              bills={dashboardData.bills}
+              expenses={dashboardData.expenses}
+              savings={dashboardData.savings}
+              debts={dashboardData.debts}
+              subscriptions={dashboardData.subscriptions}
+            />
+
             {/* Income Management Section */}
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-xl font-semibold text-white">Income Sources</h2>
@@ -418,7 +430,7 @@ export const Dashboard = () => {
                 {dashboardData.incomes.map((income, index) => (
                   <div
                     key={index}
-                    className="bg-gray-700/30 rounded-lg p-4 hover:bg-gray-700/50 transition-colors"
+                    className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors"
                   >
                     <div className="flex justify-between items-start">
                       <div>
@@ -476,7 +488,7 @@ export const Dashboard = () => {
             </div>
 
             {/* Bills Section */}
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-xl font-semibold text-white">Bills</h2>
@@ -496,7 +508,7 @@ export const Dashboard = () => {
                 {dashboardData.bills.map((bill, index) => (
                   <div
                     key={index}
-                    className="bg-gray-700/30 rounded-lg p-4 hover:bg-gray-700/50 transition-colors"
+                    className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors"
                   >
                     <div className="flex justify-between items-start">
                       <div>
@@ -547,7 +559,7 @@ export const Dashboard = () => {
             </div>
 
             {/* Expenses Section */}
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-xl font-semibold text-white">Expenses</h2>
@@ -567,7 +579,7 @@ export const Dashboard = () => {
                 {dashboardData.expenses.map((expense, index) => (
                   <div
                     key={index}
-                    className="bg-gray-700/30 rounded-lg p-4 hover:bg-gray-700/50 transition-colors"
+                    className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors"
                   >
                     <div className="flex justify-between items-start">
                       <div>
@@ -620,7 +632,7 @@ export const Dashboard = () => {
             </div>
 
             {/* Savings Section */}
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-xl font-semibold text-white">Savings Goals</h2>
@@ -642,7 +654,7 @@ export const Dashboard = () => {
                   return (
                     <div
                       key={index}
-                      className="bg-gray-700/30 rounded-lg p-4 hover:bg-gray-700/50 transition-colors group"
+                      className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors group"
                     >
                       <div className="flex justify-between items-start">
                         <div>
@@ -729,7 +741,7 @@ export const Dashboard = () => {
             </div>
 
             {/* Debts Section */}
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-xl font-semibold text-white">Debts</h2>
@@ -749,7 +761,7 @@ export const Dashboard = () => {
                 {dashboardData.debts.map((debt, index) => (
                   <div
                     key={index}
-                    className="bg-gray-700/30 rounded-lg p-4 hover:bg-gray-700/50 transition-colors"
+                    className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors"
                   >
                     <div className="flex justify-between items-start">
                       <div>
@@ -803,7 +815,7 @@ export const Dashboard = () => {
             </div>
 
             {/* Subscriptions Section */}
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-xl font-semibold text-white">Subscriptions</h2>
@@ -823,7 +835,7 @@ export const Dashboard = () => {
                 {dashboardData.subscriptions.map((subscription, index) => (
                   <div
                     key={index}
-                    className="bg-gray-700/30 rounded-lg p-4 hover:bg-gray-700/50 transition-colors"
+                    className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors"
                   >
                     <div className="flex justify-between items-start">
                       <div>

@@ -195,11 +195,17 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate that an income type is selected
+    if (!selectedCommonItem) {
+      return; // The required attribute on the select will handle the error
+    }
+    
+    const selectedItem = commonItems.find(item => item.name === selectedCommonItem);
     
     let submissionData = {
-      ...(item || {}),
-      name: formData.name,
-      category: formData.category || 'Other',
+      name: selectedItem.name === 'Other' ? formData.name : selectedItem.name,
+      category: selectedItem.category === 'Other' ? formData.category : selectedItem.category,
     };
 
     if (type === 'incomes') {
@@ -233,6 +239,7 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
       }
     }
 
+    // If we're editing an item, include its ID
     if (item) {
       submissionData._id = item._id;
     }
@@ -318,33 +325,35 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Common Items Dropdown */}
           <div className="space-y-2">
-            <label className="block text-sm text-gray-400">Select Common {type.charAt(0).toUpperCase() + type.slice(1)}</label>
+            <label className="block text-sm text-gray-400">Select Income Type *</label>
             <select
               value={selectedCommonItem}
               onChange={handleCommonItemSelect}
+              required
               className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Select a common {type.slice(0, -1)}</option>
+              <option value="">Select an income type</option>
               {commonItems.map((item, index) => (
                 <option key={index} value={item.name}>{item.name}</option>
               ))}
             </select>
           </div>
 
-          {/* Name Input */}
-          {(showCustomName || item) && (
+          {/* Name Input - Only show if Other is selected */}
+          {showCustomName && (
             <div className="space-y-2">
-              <label className="block text-sm text-gray-400">Name</label>
+              <label className="block text-sm text-gray-400">Name *</label>
               <div className="relative">
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
                   required
-              className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+                  className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter income name"
+                />
+              </div>
             </div>
           )}
 
@@ -418,20 +427,20 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
             </div>
           )}
 
-          {/* Category Input */}
-          {(showCustomCategory || item) && (
+          {/* Category Input - Only show if Other is selected */}
+          {showCustomCategory && (
             <div className="space-y-2">
-              <label className="block text-sm text-gray-400">Category</label>
+              <label className="block text-sm text-gray-400">Category *</label>
               <div className="relative">
                 <input
                   type="text"
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                required
+                  required
                   className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-                <Tag className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  placeholder="Enter category"
+                />
               </div>
             </div>
           )}
