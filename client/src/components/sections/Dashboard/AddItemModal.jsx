@@ -205,7 +205,6 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
     
     let submissionData = {
       name: selectedItem.name === 'Other' ? formData.name : selectedItem.name,
-      category: selectedItem.category === 'Other' ? formData.category : selectedItem.category,
     };
 
     if (type === 'incomes') {
@@ -222,7 +221,11 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
         weeklyAmounts: isPaycheck ? weeklyAmounts.map(amount => parseFloat(amount) || 0) : []
       };
     } else {
-      submissionData.amount = parseFloat(formData.amount) || 0;
+      submissionData = {
+        ...submissionData,
+        amount: parseFloat(formData.amount) || 0,
+        category: selectedItem.category === 'Other' ? formData.category : selectedItem.category
+      };
       
       if (type === 'bills' || type === 'expenses') {
         submissionData.dueDate = formData.dueDate;
@@ -254,8 +257,7 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
     
     if (selectedValue === '') {
       setShowCustomName(false);
-      setShowCustomCategory(false);
-      setFormData(prev => ({ ...prev, name: '', category: '' }));
+      setFormData(prev => ({ ...prev, name: '' }));
       setIsPaycheck(false);
       return;
     }
@@ -288,14 +290,6 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
     } else {
       setShowCustomName(false);
       setFormData(prev => ({ ...prev, name: selectedItem.name }));
-    }
-
-    if (selectedItem.category === 'Other') {
-      setShowCustomCategory(true);
-      setFormData(prev => ({ ...prev, category: '' }));
-    } else {
-      setShowCustomCategory(false);
-      setFormData(prev => ({ ...prev, category: selectedItem.category }));
     }
   };
 
@@ -427,8 +421,8 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
             </div>
           )}
 
-          {/* Category Input - Only show if Other is selected */}
-          {showCustomCategory && (
+          {/* Category Input - Only show for non-income types */}
+          {type !== 'incomes' && showCustomCategory && (
             <div className="space-y-2">
               <label className="block text-sm text-gray-400">Category *</label>
               <div className="relative">
