@@ -176,8 +176,9 @@ router.post('/:type', auth, async (req, res) => {
       // Save the changes
       await user.save();
       
-      // Return the updated array
-      res.json(user.dashboard[type]);
+      // Return the newly added item (the last item in the array)
+      const addedItem = user.dashboard[type][user.dashboard[type].length - 1];
+      res.json(addedItem);
     } else {
       res.status(400).json({ message: 'Invalid item type' });
     }
@@ -248,9 +249,9 @@ router.put('/:type/:id', auth, async (req, res) => {
         return res.status(404).json({ message: 'Item not found' });
       }
       
-      // Handle specific type conversions
+      // Process the updated item based on type
       if (type === 'incomes') {
-        updatedItem.amount = parseFloat(updatedItem.amount) || 0;
+        updatedItem.amount = parseFloat(updatedItem.amount);
         if (updatedItem.nextPayDate) {
           const nextPayDate = new Date(updatedItem.nextPayDate);
           if (isNaN(nextPayDate.getTime())) {
@@ -258,15 +259,39 @@ router.put('/:type/:id', auth, async (req, res) => {
           }
           updatedItem.nextPayDate = nextPayDate;
         }
+        if (updatedItem.weeklyAmounts) {
+          updatedItem.weeklyAmounts = updatedItem.weeklyAmounts.map(Number);
+        }
+      } else if (type === 'bills' || type === 'expenses') {
+        updatedItem.amount = parseFloat(updatedItem.amount);
+        if (updatedItem.dueDate) {
+          const dueDate = new Date(updatedItem.dueDate);
+          if (isNaN(dueDate.getTime())) {
+            return res.status(400).json({ message: 'Invalid due date format' });
+          }
+          updatedItem.dueDate = dueDate;
+        }
+      } else if (type === 'savings') {
+        updatedItem.amount = parseFloat(updatedItem.amount || 0);
+        updatedItem.goal = parseFloat(updatedItem.goal);
+        updatedItem.progress = parseFloat(updatedItem.progress || 0);
+      } else if (type === 'debts') {
+        updatedItem.amount = parseFloat(updatedItem.amount);
+        updatedItem.interest = parseFloat(updatedItem.interest);
+        updatedItem.minimumPayment = parseFloat(updatedItem.minimumPayment);
       }
-      
+
+      // Update the item while preserving the _id
       user.dashboard[type][itemIndex] = {
         ...user.dashboard[type][itemIndex].toObject(),
-        ...updatedItem
+        ...updatedItem,
+        _id: user.dashboard[type][itemIndex]._id
       };
       
       await user.save();
-      res.json(user.dashboard[type]);
+      
+      // Return the updated item
+      res.json(user.dashboard[type][itemIndex]);
     } else {
       res.status(400).json({ message: 'Invalid item type' });
     }

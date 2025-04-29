@@ -114,6 +114,8 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
       setWeeklyAmounts(item.weeklyAmounts || []);
       setShowCustomName(true);
       setShowCustomCategory(true);
+      const matchingItem = commonItems.find(commonItem => commonItem.name === item.name);
+      setSelectedCommonItem(matchingItem ? item.name : '');
     } else {
       setFormData({
         name: '',
@@ -131,8 +133,9 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
       setWeeklyAmounts([]);
       setShowCustomName(false);
       setShowCustomCategory(false);
+      setSelectedCommonItem('');
     }
-  }, [item, type]);
+  }, [item, type, commonItems]);
 
   useEffect(() => {
     switch (type) {
@@ -194,32 +197,44 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
     e.preventDefault();
     
     let submissionData = {
+      ...(item || {}),
       name: formData.name,
-      amount: parseFloat(formData.amount),
       category: formData.category || 'Other',
     };
 
     if (type === 'incomes') {
+      const totalAmount = isPaycheck 
+        ? weeklyAmounts.reduce((sum, amount) => sum + (parseFloat(amount) || 0), 0)
+        : parseFloat(formData.amount) || 0;
+
       submissionData = {
         ...submissionData,
-        amount: isPaycheck ? weeklyAmounts.reduce((sum, amount) => sum + (parseFloat(amount) || 0), 0) : parseFloat(formData.amount) || 0,
+        amount: totalAmount,
         frequency: formData.frequency || 'monthly',
         nextPayDate: formData.nextPayDate || new Date().toISOString().split('T')[0],
         isPaycheck: isPaycheck,
-        weeklyAmounts: weeklyAmounts.map(amount => parseFloat(amount) || 0)
+        weeklyAmounts: isPaycheck ? weeklyAmounts.map(amount => parseFloat(amount) || 0) : []
       };
-    } else if (type === 'bills' || type === 'expenses') {
-      submissionData.dueDate = formData.dueDate;
-    } else if (type === 'savings') {
-      submissionData = {
-        ...submissionData,
-        goal: parseFloat(formData.goal) || 0,
-        progress: parseFloat(formData.amount) || 0,
-        amount: parseFloat(formData.amount) || 0
-      };
-    } else if (type === 'debts') {
-      submissionData.interest = parseFloat(formData.interest);
-      submissionData.minimumPayment = parseFloat(formData.minimumPayment);
+    } else {
+      submissionData.amount = parseFloat(formData.amount) || 0;
+      
+      if (type === 'bills' || type === 'expenses') {
+        submissionData.dueDate = formData.dueDate;
+      } else if (type === 'savings') {
+        submissionData = {
+          ...submissionData,
+          goal: parseFloat(formData.goal) || 0,
+          progress: parseFloat(formData.progress) || 0,
+          amount: parseFloat(formData.amount) || 0
+        };
+      } else if (type === 'debts') {
+        submissionData.interest = parseFloat(formData.interest);
+        submissionData.minimumPayment = parseFloat(formData.minimumPayment);
+      }
+    }
+
+    if (item) {
+      submissionData._id = item._id;
     }
 
     onAdd(submissionData);
@@ -302,21 +317,19 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Common Items Dropdown */}
-          {!item && (
-            <div className="space-y-2">
-              <label className="block text-sm text-gray-400">Select Common {type.charAt(0).toUpperCase() + type.slice(1)}</label>
-              <select
-                value={selectedCommonItem}
-                onChange={handleCommonItemSelect}
-                className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select a common {type.slice(0, -1)}</option>
-                {commonItems.map((item, index) => (
-                  <option key={index} value={item.name}>{item.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div className="space-y-2">
+            <label className="block text-sm text-gray-400">Select Common {type.charAt(0).toUpperCase() + type.slice(1)}</label>
+            <select
+              value={selectedCommonItem}
+              onChange={handleCommonItemSelect}
+              className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select a common {type.slice(0, -1)}</option>
+              {commonItems.map((item, index) => (
+                <option key={index} value={item.name}>{item.name}</option>
+              ))}
+            </select>
+          </div>
 
           {/* Name Input */}
           {(showCustomName || item) && (
@@ -335,23 +348,25 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
             </div>
           )}
 
-          {/* Amount Input */}
-          <div className="space-y-2">
-            <label className="block text-sm text-gray-400">Amount</label>
-            <div className="relative">
-              <input
-                type="number"
-                name="amount"
-                value={formData.amount}
-                onChange={handleChange}
-                required
-                min="0"
-                step="0.01"
-                className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <DollarSign className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          {/* Amount Input - Only show if not paycheck */}
+          {!isPaycheck && (
+            <div className="space-y-2">
+              <label className="block text-sm text-gray-400">Amount</label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="number"
+                  name="amount"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  required
+                  min="0"
+                  step="0.01"
+                  className="w-full bg-gray-700/50 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Frequency Input */}
           {type === 'incomes' && (
@@ -382,6 +397,7 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
               </label>
               {weeklyAmounts.map((amount, index) => (
                 <div key={index} className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
                     type="number"
                     value={amount}
@@ -392,9 +408,8 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
                     required
                     min="0"
                     step="0.01"
-                    className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-gray-700/50 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <DollarSign className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 </div>
               ))}
               <div className="text-sm text-gray-400">
@@ -444,17 +459,17 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
             <div className="space-y-2">
               <label className="block text-sm text-gray-400">Goal Amount</label>
               <div className="relative">
-              <input
+                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
                   type="number"
                   name="goal"
                   value={formData.goal}
-                onChange={handleChange}
+                  onChange={handleChange}
                   required
                   min="0"
                   step="0.01"
-                className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-                <DollarSign className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  className="w-full bg-gray-700/50 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
             </div>
           )}
@@ -465,21 +480,22 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
               <div className="space-y-2">
                 <label className="block text-sm text-gray-400">Interest Rate (%)</label>
                 <div className="relative">
-                <input
-                  type="number"
-                  name="interest"
-                  value={formData.interest}
-                  onChange={handleChange}
+                  <input
+                    type="number"
+                    name="interest"
+                    value={formData.interest}
+                    onChange={handleChange}
                     required
                     min="0"
                     step="0.01"
-                  className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                    className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="block text-sm text-gray-400">Minimum Payment</label>
                 <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
                     type="number"
                     name="minimumPayment"
@@ -488,9 +504,8 @@ export const AddItemModal = ({ isOpen, onClose, type, item, onAdd, isSubmitting 
                     required
                     min="0"
                     step="0.01"
-                    className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-gray-700/50 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <DollarSign className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 </div>
               </div>
             </>

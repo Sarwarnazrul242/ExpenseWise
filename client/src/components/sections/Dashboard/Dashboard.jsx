@@ -201,35 +201,44 @@ export const Dashboard = () => {
   const handleAddItem = async (newItem) => {
     try {
       setIsSubmitting(true);
-      // Immediately update the UI with the new item
-      setDashboardData(prev => ({
-        ...prev,
-        [modalType]: [...prev[modalType], { ...newItem, _id: Date.now().toString() }]
-      }));
       
-      // Then make the API call
-      const updatedData = await addItem(modalType, newItem);
-      
-      // Update the UI with the server response
-      setDashboardData(prev => ({
-        ...prev,
-        [modalType]: prev[modalType].map(item => 
-          item._id === Date.now().toString() ? updatedData : item
-        )
-      }));
+      if (editingItem) {
+        // If we're editing, update the existing item
+        const updatedItem = await editItem(modalType, editingItem._id, {
+          ...newItem,
+          _id: editingItem._id // Ensure we pass the ID
+        });
+
+        // Update the UI with the complete updated item data
+        setDashboardData(prev => ({
+          ...prev,
+          [modalType]: prev[modalType].map(item => 
+            item._id === editingItem._id ? updatedItem : item
+          )
+        }));
+      } else {
+        // Make the API call to add the new item
+        const addedItem = await addItem(modalType, newItem);
+        
+        // Update the UI with the server response by appending the new item
+        setDashboardData(prev => {
+          // Ensure the array exists
+          const currentArray = prev[modalType] || [];
+          return {
+            ...prev,
+            [modalType]: [...currentArray, addedItem]
+          };
+        });
+      }
       
       setShowModal(false);
       setError(null);
     } catch (err) {
-      console.error('Error adding item:', err);
+      console.error('Error handling item:', err);
       setError(err.message);
-      // Revert the UI update if the server request fails
-      setDashboardData(prev => ({
-        ...prev,
-        [modalType]: prev[modalType].filter(item => item._id !== Date.now().toString())
-      }));
     } finally {
       setIsSubmitting(false);
+      setEditingItem(null);
     }
   };
 
@@ -295,27 +304,8 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 pt-24 relative overflow-hidden">
-      {/* Background elements */}
-      <div className="absolute inset-0">
-        <div className="absolute w-[200%] h-[200%] top-[-50%] left-[-50%] animate-gradient-rotate">
-          <div className="absolute w-full h-full bg-gradient-to-br from-blue-800/20 via-transparent to-cyan-500/20 blur-3xl" />
-          <div className="absolute w-full h-full bg-gradient-to-bl from-blue-500/10 via-transparent to-cyan-800/10 blur-3xl" />
-        </div>
-      </div>
-
-      {/* Blurred circles */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-20 left-20 w-32 h-32 bg-blue-500 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-20 w-32 h-32 bg-purple-500 rounded-full blur-3xl"></div>
-      </div>
-
-      {/* Text Hover Effect Background */}
-      <div className="absolute inset-0 opacity-20">
-        <TextHoverEffect text="ExpenseWise" duration={0.1} />
-      </div>
-
-      <div className="relative z-10 max-w-7xl mx-auto">
+    <div className="min-h-screen p-6 pt-24">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
